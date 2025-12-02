@@ -1,17 +1,38 @@
 # demucs-cxfreeze (with diffq support)
 
-Fork with `diffq` support for quantized models (mdx_q, mdx_extra_q, htdemucs_mmi).
+A frozen (standalone) build of Facebook's Demucs audio source separation tool, with **diffq** support for quantized models.
 
-## Freezing `demucs`
+## Credits
+
+This project is based on:
+- **[stemrollerapp/demucs-cxfreeze](https://github.com/stemrollerapp/demucs-cxfreeze)** - Original frozen Demucs binary project
+- **[facebookresearch/demucs](https://github.com/facebookresearch/demucs)** - The original Demucs source separation library by Facebook Research
+
+## What's New
+
+This fork adds `diffq` support, enabling the following quantized models that weren't available in the original:
+- `mdx_q` - MDX Quantized (faster, smaller)
+- `mdx_extra_q` - MDX Extra Quantized (best balance of speed/quality)
+
+## Available Builds
+
+| Platform | File | Notes |
+|----------|------|-------|
+| macOS Intel | `demucs-cxfreeze-mac-intel.zip` | For Intel Macs |
+| macOS ARM | `demucs-cxfreeze-mac-arm.zip` | For Apple Silicon (M1/M2/M3) |
+| Windows CUDA | `demucs-cxfreeze-win-cuda.7z` | GPU accelerated |
+| Windows CPU | `demucs-cxfreeze-win-cpu.zip` | CPU only |
+
+## Building from Source
 
 **With CUDA support (Windows & Linux)**
 ```
-pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu126 demucs SoundFile cx-Freeze diffq
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu126 demucs SoundFile cx-Freeze diffq 'numpy<2'
 ```
 
 **CPU only (Any OS)**
 ```
-pip3 install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+pip3 install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq 'numpy<2'
 ```
 
 And then:
@@ -19,32 +40,38 @@ And then:
 cxfreeze main.py --target-dir=dist --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
 ```
 
-Copy `venv/Lib/site-packages/_soundfile_data` to `dist/lib/_soundfile_data`
-
 ## Supported Models
 
-With `diffq` included, these additional models are now supported:
-- `mdx_q` - MDX Quantized (faster)
-- `mdx_extra_q` - MDX Extra Quantized (best balance speed/quality)
-- `htdemucs_mmi` - HTDemucs with more musical information
+All standard Demucs models are supported:
+- `htdemucs` - Hybrid Transformer Demucs (fast)
+- `htdemucs_ft` - Fine-tuned HTDemucs (best quality, bag of 4)
+- `htdemucs_6s` - 6-stem separation (+ piano, guitar)
+- `hdemucs_mmi` - Hybrid Demucs with more musical information
+- `mdx` - MDX architecture
+- `mdx_extra` - MDX Extra (bag of 4)
+- `mdx_q` - MDX Quantized ✨ **NEW**
+- `mdx_extra_q` - MDX Extra Quantized ✨ **NEW**
 
-## Additional Dependencies (should be shipped with frozen Demucs)
+## Requirements
 
-### `ffmpeg` and `ffprobe`
+### FFmpeg
 
-The directory containing `ffmpeg` and `ffprobe` binaries should be added to the `PATH` environment variable.
+`ffmpeg` and `ffprobe` must be in your PATH or provided separately. They are NOT bundled with this release.
 
 #### Windows
 https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
 
 #### macOS
-- https://evermeet.cx/ffmpeg/ffmpeg-109428-g10a56363a7.zip
-- https://evermeet.cx/ffmpeg/ffprobe-109428-g10a56363a7.zip
+- https://evermeet.cx/ffmpeg/
 
 ### Models
 
-Downloaded models and their YAML files should be placed in a directory passed via the `--repo` argument, 
-or in the `DEMUCS_CACHE_DIR` environment variable path.
+Models are downloaded automatically by Demucs, or you can set the `DEMUCS_CACHE_DIR` environment variable to a directory containing pre-downloaded models.
 
-#### All model files list
-https://raw.githubusercontent.com/facebookresearch/demucs/main/demucs/remote/files.txt
+Model file list: https://raw.githubusercontent.com/facebookresearch/demucs/main/demucs/remote/files.txt
+
+## License
+
+This project follows the licenses of the original projects:
+- Demucs: MIT License
+- demucs-cxfreeze: MIT License
