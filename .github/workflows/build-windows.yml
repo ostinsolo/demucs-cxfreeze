@@ -1,0 +1,65 @@
+name: build-windows
+on:
+  workflow_dispatch: null
+  push:
+    branches: [main]
+
+jobs:
+  build-windows-cuda:
+    name: Build demucs-cxfreeze for Windows (CUDA)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+      - run: pip install demucs SoundFile cx-Freeze diffq
+      - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cuda --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -OutFile 7zr.exe
+      - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2201-x64.exe -OutFile 7zInstaller-x64.exe
+      - run: .\7zr.exe x "7zInstaller-x64.exe"
+      - run: .\7z.exe a -m0=lzma2 -mmt=on -mx=9 "demucs-cxfreeze-win-cuda.7z" "demucs-cxfreeze-win-cuda"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demucs-cxfreeze-win-cuda
+          path: demucs-cxfreeze-win-cuda.7z
+
+  build-windows-cpu:
+    name: Build demucs-cxfreeze for Windows (CPU only)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install demucs SoundFile cx-Freeze diffq
+      - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cpu --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      - run: Compress-Archive -Path demucs-cxfreeze-win-cpu -DestinationPath demucs-cxfreeze-win-cpu.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demucs-cxfreeze-win-cpu
+          path: demucs-cxfreeze-win-cpu.zip
+
+  release:
+    name: Create Release
+    needs: [build-windows-cuda, build-windows-cpu]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: demucs-cxfreeze-win-cuda
+      - uses: actions/download-artifact@v4
+        with:
+          name: demucs-cxfreeze-win-cpu
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.sha }}
+          files: |
+            demucs-cxfreeze-win-cuda.7z
+            demucs-cxfreeze-win-cpu.zip

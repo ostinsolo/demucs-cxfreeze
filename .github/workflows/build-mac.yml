@@ -1,0 +1,60 @@
+name: build-mac
+on:
+  workflow_dispatch: null
+  push:
+    branches: [main]
+
+jobs:
+  build-mac-intel:
+    name: Build demucs-cxfreeze for macOS Intel
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-intel demucs-cxfreeze-mac-intel.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demucs-cxfreeze-mac-intel
+          path: demucs-cxfreeze-mac-intel.zip
+
+  build-mac-arm:
+    name: Build demucs-cxfreeze for macOS ARM (Apple Silicon)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-arm demucs-cxfreeze-mac-arm.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demucs-cxfreeze-mac-arm
+          path: demucs-cxfreeze-mac-arm.zip
+
+  release:
+    name: Create Release
+    needs: [build-mac-intel, build-mac-arm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: demucs-cxfreeze-mac-intel
+      - uses: actions/download-artifact@v4
+        with:
+          name: demucs-cxfreeze-mac-arm
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.sha }}
+          files: |
+            demucs-cxfreeze-mac-intel.zip
+            demucs-cxfreeze-mac-arm.zip
