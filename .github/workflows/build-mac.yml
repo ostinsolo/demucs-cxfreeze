@@ -15,7 +15,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq 'numpy<2'
+      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
+      - run: pip install 'numpy<2'
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-intel demucs-cxfreeze-mac-intel.zip
       - uses: actions/upload-artifact@v4
@@ -33,7 +35,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq 'numpy<2'
+      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
+      - run: pip install 'numpy<2'
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-arm demucs-cxfreeze-mac-arm.zip
       - uses: actions/upload-artifact@v4

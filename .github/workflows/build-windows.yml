@@ -15,8 +15,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
+      - run: pip install "numpy<2"
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-      - run: pip install demucs SoundFile cx-Freeze diffq 'numpy<2'
+      - run: pip install demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cuda --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -OutFile 7zr.exe
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2201-x64.exe -OutFile 7zInstaller-x64.exe
@@ -37,8 +39,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
+      - run: pip install "numpy<2"
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install demucs SoundFile cx-Freeze diffq 'numpy<2'
+      - run: pip install demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cpu --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: Compress-Archive -Path demucs-cxfreeze-win-cpu -DestinationPath demucs-cxfreeze-win-cpu.zip
       - uses: actions/upload-artifact@v4
