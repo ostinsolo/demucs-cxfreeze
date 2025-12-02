@@ -14,12 +14,9 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # Python 3.10 - matching successful local build
-      # Pin versions that match our successful local build:
-      # - numpy<2: prevents numpy.core.multiarray error
-      # - einops<0.7: prevents torch._dynamo source inspection errors
-      # - cx_Freeze==6.15.0: avoids bytecode generation bugs in newer versions
-      - run: pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0' torch torchvision torchaudio demucs SoundFile diffq
+          python-version: '3.11'  # Python 3.11 like stemrollerapp
+      # Use latest cx-Freeze like stemrollerapp, just add diffq for quantized models
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
@@ -40,12 +37,9 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # Python 3.10 - matching successful local build
-      # Pin versions that match our successful local build:
-      # - numpy<2: prevents numpy.core.multiarray error
-      # - einops<0.7: prevents torch._dynamo source inspection errors
-      # - cx_Freeze==6.15.0: avoids bytecode generation bugs in newer versions
-      - run: pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0' torch torchvision torchaudio demucs SoundFile diffq
+          python-version: '3.11'  # Python 3.11 like stemrollerapp
+      # Use latest cx-Freeze like stemrollerapp, just add diffq for quantized models
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
