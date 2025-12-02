@@ -14,9 +14,12 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Only numpy<2 is required (numpy 2.x breaks model loading)
-      - run: pip install 'numpy<2' torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'  # Python 3.10 - matching successful local build
+      # Pin versions that match our successful local build:
+      # - numpy<2: prevents numpy.core.multiarray error
+      # - einops<0.7: prevents torch._dynamo source inspection errors
+      # - cx_Freeze==6.15.0: avoids bytecode generation bugs in newer versions
+      - run: pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0' torch torchvision torchaudio demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
@@ -37,9 +40,12 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Only numpy<2 is required (numpy 2.x breaks model loading)
-      - run: pip install 'numpy<2' torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'  # Python 3.10 - matching successful local build
+      # Pin versions that match our successful local build:
+      # - numpy<2: prevents numpy.core.multiarray error
+      # - einops<0.7: prevents torch._dynamo source inspection errors
+      # - cx_Freeze==6.15.0: avoids bytecode generation bugs in newer versions
+      - run: pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0' torch torchvision torchaudio demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
@@ -69,12 +75,19 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
-          name: v1.1.0 - Demucs with diffq support
+          tag_name: v1.2.0
+          name: v1.2.0 - Fixed build with proper version pins
           body: |
-            ## Demucs-cxfreeze with diffq support
+            ## Demucs-cxfreeze v1.2.0 - Fixed Build
             
             Standalone frozen Demucs binary with **diffq** support for quantized models.
+            
+            ### Changes in v1.2.0
+            - Fixed PyTorch JIT warnings by pinning correct dependency versions
+            - Python 3.10 (more stable for freezing)
+            - einops<0.7 (avoids torch._dynamo source inspection errors)
+            - cx_Freeze==6.15.0 (avoids bytecode bugs in newer versions)
+            - numpy<2 (prevents numpy.core.multiarray error)
             
             ### Supported Models
             - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
