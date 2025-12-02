@@ -7,18 +7,23 @@ on:
 jobs:
   build-mac-intel:
     name: Build demucs-cxfreeze for macOS Intel
-    runs-on: macos-15-large
+    runs-on: macos-13  # Intel runner (free)
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
-      - run: pip install 'numpy<2'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'
+      # Pin exact versions that work (tested locally)
+      - run: |
+          pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0'
+          pip install torch torchvision torchaudio demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      # Test the build before packaging
+      - run: |
+          chmod +x demucs-cxfreeze-mac-intel/demucs-cxfreeze
+          ./demucs-cxfreeze-mac-intel/demucs-cxfreeze --help
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-intel demucs-cxfreeze-mac-intel.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -27,18 +32,23 @@ jobs:
 
   build-mac-arm:
     name: Build demucs-cxfreeze for macOS ARM (Apple Silicon)
-    runs-on: macos-latest
+    runs-on: macos-latest  # ARM runner
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
-      - run: pip install 'numpy<2'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'
+      # Pin exact versions that work (tested locally)
+      - run: |
+          pip install 'numpy<2' 'einops<0.7' 'cx_Freeze==6.15.0'
+          pip install torch torchvision torchaudio demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      # Test the build before packaging
+      - run: |
+          chmod +x demucs-cxfreeze-mac-arm/demucs-cxfreeze
+          ./demucs-cxfreeze-mac-arm/demucs-cxfreeze --help
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-arm demucs-cxfreeze-mac-arm.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -63,19 +73,33 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-${{ github.run_number }}
-          name: Release v1.0.0-${{ github.run_number }}
+          tag_name: v1.1.0
+          name: v1.1.0 - Demucs with diffq support
           body: |
-            Demucs-cxfreeze with diffq support for quantized models.
+            ## Demucs-cxfreeze with diffq support
             
-            ## Supported Models
+            Standalone frozen Demucs binary with **diffq** support for quantized models.
+            
+            ### Supported Models
             - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
             - mdx, mdx_extra
-            - mdx_q, mdx_extra_q (NEW - requires diffq)
+            - **mdx_q, mdx_extra_q** (quantized models - require diffq)
             
-            ## Downloads
-            - **macOS Intel**: demucs-cxfreeze-mac-intel.zip
-            - **macOS ARM**: demucs-cxfreeze-mac-arm.zip
+            ### Downloads
+            | Platform | File | Notes |
+            |----------|------|-------|
+            | macOS Intel | demucs-cxfreeze-mac-intel.zip | For Intel Macs |
+            | macOS ARM | demucs-cxfreeze-mac-arm.zip | For Apple Silicon (M1/M2/M3) |
+            
+            ### Build Info
+            - Python 3.10
+            - numpy < 2 (for model compatibility)
+            - einops < 0.7 (for torch._dynamo compatibility)
+            - cx_Freeze 6.15.0
+            
+            ### Credits
+            - [stemrollerapp/demucs-cxfreeze](https://github.com/stemrollerapp/demucs-cxfreeze) - Original frozen binary
+            - [facebookresearch/demucs](https://github.com/facebookresearch/demucs) - Original Demucs library
           files: |
             ./artifacts/demucs-cxfreeze-mac-intel.zip
             ./artifacts/demucs-cxfreeze-mac-arm.zip

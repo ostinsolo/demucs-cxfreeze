@@ -14,12 +14,15 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
-      - run: pip install "numpy<2"
-      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-      - run: pip install demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'
+      # Pin exact versions that work
+      - run: |
+          pip install "numpy<2" "einops<0.7" "cx_Freeze==6.15.0"
+          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+          pip install demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cuda --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      # Test the build before packaging
+      - run: .\demucs-cxfreeze-win-cuda\demucs-cxfreeze.exe --help
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -OutFile 7zr.exe
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2201-x64.exe -OutFile 7zInstaller-x64.exe
       - run: .\7zr.exe x "7zInstaller-x64.exe"
@@ -38,12 +41,15 @@ jobs:
           ref: main
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      # Pin numpy<2 FIRST to avoid numpy 2.x incompatibility with saved PyTorch models
-      - run: pip install "numpy<2"
-      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install demucs SoundFile cx-Freeze diffq
+          python-version: '3.10'
+      # Pin exact versions that work
+      - run: |
+          pip install "numpy<2" "einops<0.7" "cx_Freeze==6.15.0"
+          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cpu --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
+      # Test the build before packaging
+      - run: .\demucs-cxfreeze-win-cpu\demucs-cxfreeze.exe --help
       - run: Compress-Archive -Path demucs-cxfreeze-win-cpu -DestinationPath demucs-cxfreeze-win-cpu.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -68,19 +74,29 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-win-${{ github.run_number }}
-          name: Release v1.0.0 Windows - Build ${{ github.run_number }}
+          tag_name: v1.1.0-win
+          name: v1.1.0 Windows - Demucs with diffq support
           body: |
-            Demucs-cxfreeze with diffq support for quantized models (Windows builds).
+            ## Demucs-cxfreeze with diffq support (Windows)
             
-            ## Supported Models
+            Standalone frozen Demucs binary with **diffq** support for quantized models.
+            
+            ### Supported Models
             - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
             - mdx, mdx_extra
-            - mdx_q, mdx_extra_q (NEW - requires diffq)
+            - **mdx_q, mdx_extra_q** (quantized models - require diffq)
             
-            ## Downloads
-            - **Windows CUDA**: demucs-cxfreeze-win-cuda.7z (GPU accelerated)
-            - **Windows CPU**: demucs-cxfreeze-win-cpu.zip (CPU only)
+            ### Downloads
+            | Platform | File | Notes |
+            |----------|------|-------|
+            | Windows CUDA | demucs-cxfreeze-win-cuda.7z | GPU accelerated |
+            | Windows CPU | demucs-cxfreeze-win-cpu.zip | CPU only |
+            
+            ### Build Info
+            - Python 3.10
+            - numpy < 2 (for model compatibility)
+            - einops < 0.7 (for torch._dynamo compatibility)
+            - cx_Freeze 6.15.0
           files: |
             ./artifacts/demucs-cxfreeze-win-cuda.7z
             ./artifacts/demucs-cxfreeze-win-cpu.zip
