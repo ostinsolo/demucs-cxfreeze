@@ -1,6 +1,6 @@
 name: build-windows
 on:
-  workflow_dispatch: null
+  workflow_dispatch:
   push:
     branches: [main]
 
@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-      - run: pip install demucs SoundFile cx-Freeze diffq
+      - run: pip install demucs SoundFile cx-Freeze diffq 'numpy<2'
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cuda --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -OutFile 7zr.exe
       - run: Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2201-x64.exe -OutFile 7zInstaller-x64.exe
@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install demucs SoundFile cx-Freeze diffq
+      - run: pip install demucs SoundFile cx-Freeze diffq 'numpy<2'
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cpu --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: Compress-Archive -Path demucs-cxfreeze-win-cpu -DestinationPath demucs-cxfreeze-win-cpu.zip
       - uses: actions/upload-artifact@v4
@@ -50,16 +50,35 @@ jobs:
     name: Create Release
     needs: [build-windows-cuda, build-windows-cpu]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: demucs-cxfreeze-win-cuda
+          path: ./artifacts
       - uses: actions/download-artifact@v4
         with:
           name: demucs-cxfreeze-win-cpu
-      - uses: softprops/action-gh-release@v1
+          path: ./artifacts
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ github.sha }}
+          tag_name: v1.0.0-win-${{ github.run_number }}
+          name: Release v1.0.0 Windows - Build ${{ github.run_number }}
+          body: |
+            Demucs-cxfreeze with diffq support for quantized models (Windows builds).
+            
+            ## Supported Models
+            - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
+            - mdx, mdx_extra
+            - mdx_q, mdx_extra_q (NEW - requires diffq)
+            
+            ## Downloads
+            - **Windows CUDA**: demucs-cxfreeze-win-cuda.7z (GPU accelerated)
+            - **Windows CPU**: demucs-cxfreeze-win-cpu.zip (CPU only)
           files: |
-            demucs-cxfreeze-win-cuda.7z
-            demucs-cxfreeze-win-cpu.zip
+            ./artifacts/demucs-cxfreeze-win-cuda.7z
+            ./artifacts/demucs-cxfreeze-win-cpu.zip
+          draft: false
+          prerelease: false

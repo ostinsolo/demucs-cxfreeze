@@ -1,13 +1,13 @@
 name: build-mac
 on:
-  workflow_dispatch: null
+  workflow_dispatch:
   push:
     branches: [main]
 
 jobs:
   build-mac-intel:
     name: Build demucs-cxfreeze for macOS Intel
-    runs-on: macos-13
+    runs-on: macos-15-large
     steps:
       - uses: actions/checkout@v4
         with:
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq 'numpy<2'
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-intel demucs-cxfreeze-mac-intel.zip
       - uses: actions/upload-artifact@v4
@@ -25,7 +25,7 @@ jobs:
 
   build-mac-arm:
     name: Build demucs-cxfreeze for macOS ARM (Apple Silicon)
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq 'numpy<2'
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       - run: ditto -c -k --sequesterRsrc --keepParent demucs-cxfreeze-mac-arm demucs-cxfreeze-mac-arm.zip
       - uses: actions/upload-artifact@v4
@@ -45,16 +45,35 @@ jobs:
     name: Create Release
     needs: [build-mac-intel, build-mac-arm]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: demucs-cxfreeze-mac-intel
+          path: ./artifacts
       - uses: actions/download-artifact@v4
         with:
           name: demucs-cxfreeze-mac-arm
-      - uses: softprops/action-gh-release@v1
+          path: ./artifacts
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ github.sha }}
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: Release v1.0.0-${{ github.run_number }}
+          body: |
+            Demucs-cxfreeze with diffq support for quantized models.
+            
+            ## Supported Models
+            - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
+            - mdx, mdx_extra
+            - mdx_q, mdx_extra_q (NEW - requires diffq)
+            
+            ## Downloads
+            - **macOS Intel**: demucs-cxfreeze-mac-intel.zip
+            - **macOS ARM**: demucs-cxfreeze-mac-arm.zip
           files: |
-            demucs-cxfreeze-mac-intel.zip
-            demucs-cxfreeze-mac-arm.zip
+            ./artifacts/demucs-cxfreeze-mac-intel.zip
+            ./artifacts/demucs-cxfreeze-mac-arm.zip
+          draft: false
+          prerelease: false
