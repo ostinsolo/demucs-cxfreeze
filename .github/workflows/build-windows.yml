@@ -15,9 +15,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Python 3.11 like stemrollerapp
-      # numpy<2: NumPy 2.x breaks PyTorch
-      # cx-Freeze==6.15.16: includes .py source files (fixes torch JIT warnings)
-      - run: pip install "numpy<2" "cx-Freeze==6.15.16" torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+      # Pin to exact versions matching stemrollerapp (April 2024)
+      # Install cx-Freeze from PyPI first (not from PyTorch index)
+      - run: pip install "numpy<2" "cx-Freeze==6.15.16"
+      - run: pip install "torch==2.2.2+cu121" "torchvision==0.17.2+cu121" "torchaudio==2.2.2+cu121" --index-url https://download.pytorch.org/whl/cu121
       - run: pip install demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cuda --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
@@ -41,9 +42,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Python 3.11 like stemrollerapp
-      # numpy<2: NumPy 2.x breaks PyTorch
-      # cx-Freeze==6.15.16: includes .py source files (fixes torch JIT warnings)
-      - run: pip install "numpy<2" "cx-Freeze==6.15.16" torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      # Pin to exact versions matching stemrollerapp (April 2024)
+      # Install cx-Freeze from PyPI first (not from PyTorch index)
+      - run: pip install "numpy<2" "cx-Freeze==6.15.16"
+      - run: pip install "torch==2.2.2+cpu" "torchvision==0.17.2+cpu" "torchaudio==2.2.2+cpu" --index-url https://download.pytorch.org/whl/cpu
       - run: pip install demucs SoundFile diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-win-cpu --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
