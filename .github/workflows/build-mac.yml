@@ -15,8 +15,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Python 3.11 like stemrollerapp
-      # Use latest cx-Freeze like stemrollerapp, just add diffq for quantized models
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      # numpy<2 is CRITICAL - NumPy 2.x renamed core to _core, breaking PyTorch
+      - run: pip install 'numpy<2' torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-intel --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
@@ -38,8 +38,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Python 3.11 like stemrollerapp
-      # Use latest cx-Freeze like stemrollerapp, just add diffq for quantized models
-      - run: pip install torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
+      # numpy<2 is CRITICAL - NumPy 2.x renamed core to _core, breaking PyTorch
+      - run: pip install 'numpy<2' torch torchvision torchaudio demucs SoundFile cx-Freeze diffq
       - run: cxfreeze main.py --target-dir=demucs-cxfreeze-mac-arm --target-name=demucs-cxfreeze --packages=torch --includes=demucs.htdemucs,diffq
       # Test before packaging
       - run: |
@@ -69,19 +69,18 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.0
-          name: v1.2.0 - Fixed build with proper version pins
+          tag_name: v1.3.0
+          name: v1.3.0 - Fixed NumPy 2.x compatibility
           body: |
-            ## Demucs-cxfreeze v1.2.0 - Fixed Build
+            ## Demucs-cxfreeze v1.3.0 - Fixed NumPy 2.x Compatibility
             
             Standalone frozen Demucs binary with **diffq** support for quantized models.
             
-            ### Changes in v1.2.0
-            - Fixed PyTorch JIT warnings by pinning correct dependency versions
-            - Python 3.10 (more stable for freezing)
-            - einops<0.7 (avoids torch._dynamo source inspection errors)
-            - cx_Freeze==6.15.0 (avoids bytecode bugs in newer versions)
-            - numpy<2 (prevents numpy.core.multiarray error)
+            ### Changes in v1.3.0
+            - **CRITICAL FIX**: Pin numpy<2 - NumPy 2.x renamed `numpy.core` to `numpy._core`, breaking PyTorch model loading
+            - Python 3.11 (matching stemrollerapp)
+            - Latest cx-Freeze
+            - Includes diffq for quantized model support
             
             ### Supported Models
             - htdemucs, htdemucs_ft, htdemucs_6s, hdemucs_mmi
